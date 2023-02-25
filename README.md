@@ -1,1 +1,1 @@
-My first Discord Bot in Python
+Discord Bot in Python
