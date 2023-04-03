@@ -2,6 +2,7 @@ import openai
 import discord
 from discord.ext import commands 
 import requests
+import httpx
 import os
 from dotenv import load_dotenv
 
@@ -12,6 +13,9 @@ load_dotenv()
 openai.api_key  = os.environ.get("OPENAI")
 #token discord
 token = os.environ.get("DISCORD")
+#alpha api
+alpha_api = os.environ.get("ALPHAVANTAGE_API_KEY")
+
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
@@ -98,5 +102,21 @@ async def ai_response(ctx,*args):
         except:
             await ctx.send('say !chatgpt and write you question after that, example: !chatgpt who is the president of usa? ')
     
+@bot.command(name='stock')
+async def stock_price(ctx, symbol_stock=None):
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbol_stock.upper()}&apikey={alpha_api}")
+            data = response.json()
+            current_price = float(data["Global Quote"]["05. price"])            
+            embed = discord.Embed(
+                title=f"Price of {symbol_stock.upper()}", 
+                description=f"The current price of {symbol_stock.upper()} is **${current_price:.2f}**.", 
+                color=0x00ff00)
+                #send the embed message to the channel where the command was used
+            await ctx.send(embed=embed)
+    except:
+            await ctx.send('Error, say !stock and write the symbol of the stock, example: !stock MSFT')
+
 
 bot.run(token)
