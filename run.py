@@ -36,37 +36,38 @@ async def on_message(message: any):
         await message.delete()
     #check if the message contains a '!' to start the bot
     elif not "!" in message.content:
-        initial_msg = 'Hello, all comands: !crypto, !private, !chatgpt'
+        initial_msg = 'Hello, all comands: !crypto, !private, !chatgpt, !stock'
         await message.channel.send(initial_msg)
     await bot.process_commands(message)
 
 @bot.command(name="start")
 async def send_hello(ctx):
-    response = 'Hello, all comands: !crypto, !private, !chatgpt'
+    response = 'Hello, all comands: !crypto, !private, !chatgpt, !stock'
     await ctx.send(response)
 
 @bot.command(name="crypto")
 async def send_price_crypto(ctx, crypto=None, base=None):
     """send message with price of crypto"""
     try:
-        #send a GET request to the Binance API with the requested crypto and base symbols
-        response = requests.get(f"https://api.binance.com/api/v3/ticker/price?symbol={crypto.upper()}{base.upper()}")
-        data = response.json()  
-        #extract the current price of the requested crypto and base pair
-        price = data.get("price")
-        if price:
-            #create an embed message to display the price
-            price = float(price)
-            embed = discord.Embed(
-            title=f"Price of {crypto.upper()}/{base.upper()}", 
-            description=f"The current price of {crypto.upper()}/{base.upper()} is **${price:.2f}**.", 
-            color=0x00ff00)
-            #send the embed message to the channel where the command was used
-            await ctx.send(embed=embed)
+        async with httpx.AsyncClient() as client:
+            #send a GET request to the Binance API with the requested crypto and base symbols
+            response = await client.get(f"https://api.binance.com/api/v3/ticker/price?symbol={crypto.upper()}{base.upper()}")
+            data = response.json()  
+            #extract the current price of the requested crypto and base pair
+            price = data.get("price")
+            if price:
+                #create an embed message to display the price
+                price = float(price)
+                embed = discord.Embed(
+                title=f"Price of {crypto.upper()}/{base.upper()}", 
+                description=f"The current price of {crypto.upper()}/{base.upper()} is **${price:.2f}**.", 
+                color=0x00ff00)
+                #send the embed message to the channel where the command was used
+                await ctx.send(embed=embed)
 
-        else:
-            #if the requested pair is invalid, send an error message with an example of a valid pair
-            await ctx.send('Invalid pair, say !crypto and write the pair of crypto, example: !crypto BTC USDT')
+            else:
+                #if the requested pair is invalid, send an error message with an example of a valid pair
+                await ctx.send('Invalid pair, say !crypto and write the pair of crypto, example: !crypto BTC USDT')
     except:
         #if there is an error, send a error message
         await ctx.send('Error,  say !crypto and write the pair of crypto, example: !crypto BTC USDT')
@@ -120,3 +121,4 @@ async def stock_price(ctx, symbol_stock=None):
 
 
 bot.run(token)
+
